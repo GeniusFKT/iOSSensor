@@ -7,79 +7,14 @@
 //
 
 import UIKit
-import CoreLocation
 
-let timer = DispatchSource.makeTimerSource(flags: [], queue: DispatchQueue.global())
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate, CLLocationManagerDelegate {
-    var locationManager: CLLocationManager!
-
-    func initLocationManager() {
-        self.locationManager = CLLocationManager()
-        self.locationManager.delegate = self
-        self.locationManager.allowsBackgroundLocationUpdates = true
-        self.locationManager.showsBackgroundLocationIndicator = true
-        self.locationManager.requestAlwaysAuthorization()
-        
-        self.startMySignificantLocationChanges()
-        print("hello2")
-    }
-    
-    func startMySignificantLocationChanges() {
-        if !CLLocationManager.significantLocationChangeMonitoringAvailable() {
-            // The device does not support this service.
-            return
-        }
-        locationManager.startMonitoringSignificantLocationChanges()
-    }
-    
-    func applicationDidEnterBackground(_ application: UIApplication) {
-        print("hello1")
-        startTimer()
-        startBGTask()
-
-        return
-    }
-    
-    func startTimer() {
-        let application = UIApplication.shared
-        timer.schedule(deadline: .now(), repeating: .seconds(1), leeway: .milliseconds(10))
-        timer.setEventHandler() {
-            application.applicationIconBadgeNumber += 1
-        }
-        
-        timer.resume()
-        
-        sensor.preventStartTwice = false
-        sensor.startSensoring()
-    }
-    
-    func startBGTask() {
-        let application = UIApplication.shared
-        var bg : UIBackgroundTaskIdentifier
-        bg = application.beginBackgroundTask(withName: "hello", expirationHandler: nil)
-    }
-    
-    func locationManager(_ manager: CLLocationManager,  didUpdateLocations locations: [CLLocation]) {
-        let _ = locations.last!
-                   
-       // Do something with the location.
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-       if let error = error as? CLError, error.code == .denied {
-          // Location updates are not authorized.
-          manager.stopMonitoringSignificantLocationChanges()
-          return
-       }
-       // Notify the user of any errors.
-    }
-    
+class AppDelegate: UIResponder, UIApplicationDelegate {
+   
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        self.initLocationManager()
         UNUserNotificationCenter.current().requestAuthorization(options: .badge) { (granted, error) in
             if error != nil {
                 // success!

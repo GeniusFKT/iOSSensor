@@ -8,11 +8,66 @@
 
 import UIKit
 import SwiftUI
+import CoreLocation
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+let timer = DispatchSource.makeTimerSource(flags: [], queue: DispatchQueue.global())
+
+class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelegate {
 
     var window: UIWindow?
-
+    var locationManager: CLLocationManager!
+    
+    func initLocationManager() {
+        self.locationManager = CLLocationManager()
+        self.locationManager.delegate = self
+        self.locationManager.allowsBackgroundLocationUpdates = true
+        self.locationManager.showsBackgroundLocationIndicator = true
+        self.locationManager.requestAlwaysAuthorization()
+        
+        self.startMySignificantLocationChanges()
+    }
+    
+    func startMySignificantLocationChanges() {
+        if !CLLocationManager.significantLocationChangeMonitoringAvailable() {
+            // The device does not support this service.
+            return
+        }
+        locationManager.startMonitoringSignificantLocationChanges()
+    }
+    
+    func startTimer() {
+        let application = UIApplication.shared
+        timer.schedule(deadline: .now(), repeating: .seconds(1), leeway: .milliseconds(10))
+        timer.setEventHandler() {
+            application.applicationIconBadgeNumber += 1
+        }
+        
+        timer.resume()
+        
+        sensor.preventStartTwice = false
+        sensor.startSensoring()
+    }
+    
+    func startBGTask() {
+        let application = UIApplication.shared
+        var bg : UIBackgroundTaskIdentifier
+        bg = application.beginBackgroundTask(withName: "hello", expirationHandler: nil)
+    }
+    
+    func locationManager(_ manager: CLLocationManager,  didUpdateLocations locations: [CLLocation]) {
+        let _ = locations.last!
+                   
+       // Do something with the location.
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+       if let error = error as? CLError, error.code == .denied {
+          // Location updates are not authorized.
+          manager.stopMonitoringSignificantLocationChanges()
+          return
+       }
+       // Notify the user of any errors.
+    }
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
@@ -29,6 +84,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             self.window = window
             window.makeKeyAndVisible()
         }
+        
+        self.initLocationManager()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -57,9 +114,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
+        startTimer()
+        startBGTask()
     }
-
-
 }
 
 
