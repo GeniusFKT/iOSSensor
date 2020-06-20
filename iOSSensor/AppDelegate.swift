@@ -20,7 +20,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 // success!
             }
         }
-        application.applicationIconBadgeNumber = 1
 
         return true
     }

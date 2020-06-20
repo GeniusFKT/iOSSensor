@@ -31,14 +31,14 @@ class Sensor: ObservableObject {
     @Published var magnetic_field_y = 0.0
     @Published var magnetic_field_z = 0.0
     @Published var magnetic_field_acc = 0
-    @Published var f = "60"
+    @Published var f = "10"
     @Published var showingAlert = false
     
-    @Published var useAccelerometers = true
+    @Published var useAccelerometers = false
     @Published var useAttitude = true
-    @Published var useGyroscopes = true
-    @Published var useGravity = true
-    @Published var useMagnetometer = true
+    @Published var useGyroscopes = false
+    @Published var useGravity = false
+    @Published var useMagnetometer = false
     
     var timer = Timer()
     
