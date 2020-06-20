@@ -16,13 +16,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
 
     var window: UIWindow?
     var locationManager: CLLocationManager!
-    var timer = Timer()
     
     func initLocationManager() {
         self.locationManager = CLLocationManager()
         self.locationManager.delegate = self
         self.locationManager.allowsBackgroundLocationUpdates = true
-        self.locationManager.showsBackgroundLocationIndicator = true
         self.locationManager.pausesLocationUpdatesAutomatically = false
         self.locationManager.requestAlwaysAuthorization()
         
@@ -39,24 +37,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
     }
     
     func startTimer() {
-        let application = UIApplication.shared
-        application.applicationIconBadgeNumber = 0
-
-        // timer = DispatchSource.makeTimerSource(flags: [], queue: DispatchQueue.global())
-        // timer.schedule(deadline: .now(), repeating: .seconds(1), leeway: .milliseconds(10))
-        // timer.setEventHandler() {
-        //    application.applicationIconBadgeNumber += 1
-        //    self.initLocationManager()
-        //}
-        
-        // timer.resume()
-        
-        self.timer = Timer(fire: Date(), interval: (1.0), repeats: true, block: { (timer) in
-            application.applicationIconBadgeNumber += 1
-        })
-        
-        // Add the timer to the current run loop.
-        RunLoop.current.add(self.timer, forMode: RunLoop.Mode.default)
+        sensor.startBGSensoring()
     }
     
     func startBGTask() {

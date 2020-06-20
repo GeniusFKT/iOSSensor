@@ -14,9 +14,9 @@
             filePath = "iOSSensor/Sensor.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "120"
-            endingLineNumber = "120"
-            landmarkName = "startDeviceMotion(frequency:fileHandler:)"
+            startingLineNumber = "140"
+            endingLineNumber = "140"
+            landmarkName = "startDeviceMotion(frequency:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

@@ -14,6 +14,7 @@ let sensor = Sensor()
 class Sensor: ObservableObject {
     let motionManager = CMMotionManager()
     let fileManager = FileManager.default
+    var fileHandler = FileHandle()
     
     @Published var pitch = 0.0
     @Published var roll = 0.0
@@ -40,7 +41,8 @@ class Sensor: ObservableObject {
     @Published var useGravity = false
     @Published var useMagnetometer = false
     
-    var timer = Timer()
+    var FGtimer = Timer()
+    var BGtimer = Timer()
     
     var preventStartTwice = false
     
@@ -77,7 +79,24 @@ class Sensor: ObservableObject {
         return s
     }
     
-    func startSensoring() {
+    func startBGSensoring() {
+        // if foreground task was processing, this flag will be true
+        // so we continue our background task,
+        // if not, do nothing
+        if self.preventStartTwice {
+            // we don't need to check again
+            let f = Double(self.f)
+            self.BGtimer = Timer(fire: Date(), interval: (1.0 / f!), repeats: true, block: { (timer) in
+                self._writeCurrentData()
+            })
+            
+            // Add the timer to the current run loop.
+            RunLoop.current.add(self.FGtimer, forMode: RunLoop.Mode.default)
+        }
+    }
+    
+    // when pressing foreground start button, this function will call
+    func startFGSensoring() {
         if !self.preventStartTwice {
             self.preventStartTwice = true
             
@@ -104,83 +123,89 @@ class Sensor: ObservableObject {
             if !exist {
                 self.fileManager.createFile(atPath: file.path, contents: nil, attributes: nil)
                 
-                let fileHandler = try! FileHandle(forWritingTo: file)
-                fileHandler.seekToEndOfFile()
+                self.fileHandler = try! FileHandle(forWritingTo: file)
+                self.fileHandler.seekToEndOfFile()
                 let header = self._getHeaderString()
                 let headerData = header.data(using: String.Encoding.utf8, allowLossyConversion: true)
                 
-                fileHandler.write(headerData!)
+                self.fileHandler.write(headerData!)
                 
                 // start sensoring
-                self.startDeviceMotion(frequency: f, fileHandler: fileHandler)
+                self.startDeviceMotion(frequency: f)
             }
         }
     }
     
-    func startDeviceMotion(frequency: Double, fileHandler: FileHandle) {
+    // fetch data in a timer
+    func startDeviceMotion(frequency: Double) {
         if self.motionManager.isDeviceMotionAvailable {
             self.motionManager.deviceMotionUpdateInterval = 1.0 / frequency
             self.motionManager.showsDeviceMovementDisplay = true
             self.motionManager.startDeviceMotionUpdates(using: .xTrueNorthZVertical)
             
             // Configure a timer to fetch the motion data.
-            self.timer = Timer(fire: Date(), interval: (1.0 / frequency), repeats: true, block: { (timer) in
-                    if let data = self.motionManager.deviceMotion {
-                        // get current timestamp
-                        let timeStamp = CLongLong(round(NSDate().timeIntervalSince1970 * 1000))
-                        // current string
-                        var current = "\(timeStamp) "
-                        
-                        if self.useAccelerometers {
-                            self.x = data.userAcceleration.x
-                            self.y = data.userAcceleration.y
-                            self.z = data.userAcceleration.z
-                            current += "\(self.x) \(self.y) \(self.z) "
-                        }
-                        
-                        if self.useAttitude {
-                            self.pitch = data.attitude.pitch
-                            self.roll = data.attitude.roll
-                            self.yaw = data.attitude.yaw
-                            current += "\(self.pitch) \(self.roll) \(self.yaw) "
-                        }
-                        
-                        if self.useGyroscopes {
-                            self.rotate_x = data.rotationRate.x
-                            self.rotate_y = data.rotationRate.y
-                            self.rotate_z = data.rotationRate.z
-                            current += "\(self.rotate_x) \(self.rotate_y) \(self.rotate_z) "
-                        }
-                        
-                        if self.useMagnetometer {
-                            self.magnetic_field_x = data.magneticField.field.x
-                            self.magnetic_field_y = data.magneticField.field.y
-                            self.magnetic_field_z = data.magneticField.field.z
-                            self.magnetic_field_acc = Int(data.magneticField.accuracy.rawValue)
-                            current += "\(self.magnetic_field_x) \(self.magnetic_field_y) \(self.magnetic_field_z) \(self.magnetic_field_acc) "
-                        }
-                        
-                        if self.useGravity {
-                            self.gravity_x = data.gravity.x
-                            self.gravity_y = data.gravity.y
-                            self.gravity_z = data.gravity.z
-                            current += "\(self.gravity_x) \(self.gravity_y) \(self.gravity_z) "
-                        }
-                        
-                        current += "\n"
-                        let currentData = current.data(using: String.Encoding.utf8, allowLossyConversion: true)
-                        
-                        fileHandler.write(currentData!)
-                    }
+            self.FGtimer = Timer(fire: Date(), interval: (1.0 / frequency), repeats: true, block: { (timer) in
+                self._writeCurrentData()
             })
             
             // Add the timer to the current run loop.
-            RunLoop.current.add(self.timer, forMode: RunLoop.Mode.default)
+            RunLoop.current.add(self.FGtimer, forMode: RunLoop.Mode.default)
         }
     }
     
+    func _writeCurrentData() {
+        if let data = self.motionManager.deviceMotion {
+            // get current timestamp
+            let timeStamp = CLongLong(round(NSDate().timeIntervalSince1970 * 1000))
+            // current string
+            var current = "\(timeStamp) "
+            
+            if self.useAccelerometers {
+                self.x = data.userAcceleration.x
+                self.y = data.userAcceleration.y
+                self.z = data.userAcceleration.z
+                current += "\(self.x) \(self.y) \(self.z) "
+            }
+            
+            if self.useAttitude {
+                self.pitch = data.attitude.pitch
+                self.roll = data.attitude.roll
+                self.yaw = data.attitude.yaw
+                current += "\(self.pitch) \(self.roll) \(self.yaw) "
+            }
+            
+            if self.useGyroscopes {
+                self.rotate_x = data.rotationRate.x
+                self.rotate_y = data.rotationRate.y
+                self.rotate_z = data.rotationRate.z
+                current += "\(self.rotate_x) \(self.rotate_y) \(self.rotate_z) "
+            }
+            
+            if self.useMagnetometer {
+                self.magnetic_field_x = data.magneticField.field.x
+                self.magnetic_field_y = data.magneticField.field.y
+                self.magnetic_field_z = data.magneticField.field.z
+                self.magnetic_field_acc = Int(data.magneticField.accuracy.rawValue)
+                current += "\(self.magnetic_field_x) \(self.magnetic_field_y) \(self.magnetic_field_z) \(self.magnetic_field_acc) "
+            }
+            
+            if self.useGravity {
+                self.gravity_x = data.gravity.x
+                self.gravity_y = data.gravity.y
+                self.gravity_z = data.gravity.z
+                current += "\(self.gravity_x) \(self.gravity_y) \(self.gravity_z) "
+            }
+            
+            current += "\n"
+            let currentData = current.data(using: String.Encoding.utf8, allowLossyConversion: true)
+            
+            self.fileHandler.write(currentData!)
+        }
+    }
+    
+    // stop sensor
     func stopSensoring() {
-        self.timer.invalidate()
+        self.FGtimer.invalidate()
         self.motionManager.stopDeviceMotionUpdates()
         self.pitch = 0
         self.roll = 0

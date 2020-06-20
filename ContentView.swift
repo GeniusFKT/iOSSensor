@@ -45,7 +45,7 @@ struct ContentView: View {
                     TextField("", text: $sensor.f).frame(width: 100.0, height: 40.0).textFieldStyle(RoundedBorderTextFieldStyle())
                         
                     HStack {
-                        Button(action: sensor.startSensoring) {
+                        Button(action: sensor.startFGSensoring) {
                             Text("Start")
                             }.padding(.trailing)
                             .alert(isPresented: $sensor.showingAlert) {
