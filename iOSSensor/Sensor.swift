@@ -88,6 +88,30 @@ class Sensor: ObservableObject {
             let f = Double(self.f)
             self.BGtimer = Timer(fire: Date(), interval: (1.0 / f!), repeats: true, block: { (timer) in
                 self._writeCurrentData()
+                
+                let text = "000\n"
+                let textData = text.data(using: String.Encoding.utf8, allowLossyConversion: true)
+                self.fileHandler.write(textData!)
+            })
+            
+            // Add the timer to the current run loop.
+            RunLoop.current.add(self.BGtimer, forMode: RunLoop.Mode.default)
+        }
+    }
+    
+    func startFGSensoringFromBG() {
+        // if foreground task was processing, this flag will be true
+        // so we continue our background task,
+        // if not, do nothing
+        if self.preventStartTwice {
+            // we don't need to check again
+            let f = Double(self.f)
+            self.FGtimer = Timer(fire: Date(), interval: (1.0 / f!), repeats: true, block: { (timer) in
+                self._writeCurrentData()
+                
+                let text = "111\n"
+                let textData = text.data(using: String.Encoding.utf8, allowLossyConversion: true)
+                self.fileHandler.write(textData!)
             })
             
             // Add the timer to the current run loop.

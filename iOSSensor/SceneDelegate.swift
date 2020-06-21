@@ -16,6 +16,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
 
     var window: UIWindow?
     var locationManager: CLLocationManager!
+    var bg : UIBackgroundTaskIdentifier = .invalid
     
     func initLocationManager() {
         self.locationManager = CLLocationManager()
@@ -42,8 +43,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
     
     func startBGTask() {
         let application = UIApplication.shared
-        var bg : UIBackgroundTaskIdentifier
-        bg = application.beginBackgroundTask(withName: "hello") {
+        self.bg = application.beginBackgroundTask(withName: "hello") {
             print(application.backgroundTimeRemaining)
         }
     }
@@ -92,16 +92,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
     func sceneDidBecomeActive(_ scene: UIScene) {
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
+        sensor.startFGSensoringFromBG()
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
+        sensor.FGtimer.invalidate()
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
+        sensor.BGtimer.invalidate()
+        let application = UIApplication.shared
+        application.endBackgroundTask(self.bg)
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
