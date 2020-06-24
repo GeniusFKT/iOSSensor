@@ -9,7 +9,7 @@ y_BG = []
 y_BG_to_FG = []
 flag = 0
 
-with open("2020_06_21_15_57_50.txt") as f:
+with open("2020_06_24_19_38_38.txt") as f:
     for line in f:
         eles = line.split()
 
@@ -17,7 +17,7 @@ with open("2020_06_21_15_57_50.txt") as f:
             continue
         
         if len(eles) == 1:
-            if eles[0] == "000":
+            if eles[0] == "Background":
                 flag = 1
             else:
                 flag = 2

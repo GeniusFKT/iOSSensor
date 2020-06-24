@@ -16,7 +16,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
 
     var window: UIWindow?
     var locationManager: CLLocationManager!
-    var bg : UIBackgroundTaskIdentifier = .invalid
+    var bg: UIBackgroundTaskIdentifier = .invalid
+    var activity = ProcessInfo.processInfo.beginActivity(options: .latencyCritical, reason: "Hi")
     
     func initLocationManager() {
         self.locationManager = CLLocationManager()
@@ -80,6 +81,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
         }
         
         self.initLocationManager()
+        ProcessInfo.processInfo.endActivity(self.activity)
+        print("App Initialize")
+        print(ProcessInfo.processInfo.processIdentifier)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -92,29 +96,48 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, CLLocationManagerDelega
     func sceneDidBecomeActive(_ scene: UIScene) {
         // Called when the scene has moved from an inactive state to an active state.
         // Use this method to restart any tasks that were paused (or not yet started) when the scene was inactive.
+        print("Scene did become active")
+        print(ProcessInfo.processInfo.processIdentifier)
         sensor.startFGSensoringFromBG()
     }
 
     func sceneWillResignActive(_ scene: UIScene) {
         // Called when the scene will move from an active state to an inactive state.
         // This may occur due to temporary interruptions (ex. an incoming phone call).
+        print("Scene resign actives")
+        print(ProcessInfo.processInfo.processIdentifier)
         sensor.FGtimer.invalidate()
     }
 
     func sceneWillEnterForeground(_ scene: UIScene) {
         // Called as the scene transitions from the background to the foreground.
         // Use this method to undo the changes made on entering the background.
-        sensor.BGtimer.invalidate()
-        let application = UIApplication.shared
-        application.endBackgroundTask(self.bg)
+        print("Scene will enter foreground")
+        print(ProcessInfo.processInfo.processIdentifier)
+        
+        // since this method called when app initializes
+        // we should add an if condition
+        if sensor.preventStartTwice {
+            sensor.BGtimer.invalidate()
+            
+            let application = UIApplication.shared
+            application.endBackgroundTask(self.bg)
+            
+            ProcessInfo.processInfo.endActivity(self.activity)
+        }
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
-        startTimer()
-        startBGTask()
+        print("Scene did enter background")
+        print(ProcessInfo.processInfo.processIdentifier)
+        if sensor.preventStartTwice {
+            self.activity = ProcessInfo.processInfo.beginActivity(options: .latencyCritical, reason: "Hi")
+            startTimer()
+            startBGTask()
+        }
     }
 }
 
